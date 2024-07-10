@@ -1,14 +1,9 @@
 "use client";
 
-import React, { act, useState } from "react";
-import { FaRegTrashCan } from "react-icons/fa6";
-
-// Define the Note type
-interface Note {
-  id: number; // Assuming the ID is a string, adjust the type as necessary
-  title: string;
-  content: string;
-}
+import React, { useState } from "react";
+import { IoMdAdd } from "react-icons/io";
+import NoteButton from "./components/NoteButton";
+import { Note } from "./components/NoteButton";
 
 export default function Home() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -22,7 +17,9 @@ export default function Home() {
     const content = event.target.value;
     setNotes((prevNotes) =>
       prevNotes.map((note) =>
-        note.id === activeNoteId ? { ...note, content } : note
+        note.id === activeNoteId
+          ? { ...note, content, modifiedAt: new Date() }
+          : note
       )
     );
   };
@@ -30,7 +27,12 @@ export default function Home() {
   const createNewNote = () => {
     setNotes((prevNotes) => [
       ...prevNotes,
-      { id: Number(prevNotes.at(-1)?.id ?? 0) + 1, title: "", content: "" },
+      {
+        id: Number(prevNotes.at(-1)?.id ?? 0) + 1,
+        title: "",
+        content: "",
+        modifiedAt: new Date(),
+      },
     ]);
   };
 
@@ -38,129 +40,62 @@ export default function Home() {
     setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
   };
 
+  const getNotes = () => {
+    const sortedNotes = [...notes].sort(
+      (a, b) => b.modifiedAt.getTime() - a.modifiedAt.getTime()
+    );
+    return sortedNotes.map((note) => (
+      <React.Fragment key={note.id}>
+        <NoteButton
+          note={note}
+          openNote={openNote}
+          removeNote={removeNote}
+          active={activeNoteId === note.id}
+          titleChanged={(title: string, noteId: number) =>
+            setNotes((prevNotes) =>
+              prevNotes.map((note) =>
+                note.id === noteId
+                  ? { ...note, title, modifiedAt: new Date() }
+                  : note
+              )
+            )
+          }
+          setActiveNoteId={setActiveNoteId}
+        />
+      </React.Fragment>
+    ));
+  };
+
   return (
     <div className="flex">
-      <div className="w-64 h-screen bg-gray-800 text-white">
+      <div className="w-64 h-screen bg-gray-800 text-white border-r border-gray-700 overflow-scroll">
+        {getNotes()}
         <button
           onClick={createNewNote}
           className="block w-full text-left px-5 py-2 hover:bg-gray-700"
         >
-          Create New Note
+          <span className="flex items-center justify-center opacity-50">
+            <IoMdAdd className="" />
+          </span>
         </button>
-        {notes.map((note) => (
-          <React.Fragment key={note.id}>
-            <NoteButton
-              note={note}
-              openNote={openNote}
-              removeNote={removeNote}
-              active={activeNoteId === note.id}
-            />
-          </React.Fragment>
-        ))}
       </div>
-      <textarea
-        className="flex-1 p-10"
-        value={
-          (activeNoteId !== null &&
-            notes.find((note) => note.id === activeNoteId)?.content) ||
-          ""
-        }
-        onChange={setNoteContent}
-      ></textarea>
+      <div className="w-full bg-slate-800 text-white">
+        <h1 className="text-2xl text-center">
+          {(activeNoteId !== null &&
+            notes.find((note) => note.id === activeNoteId)?.title) ||
+            ""}
+        </h1>
+        <textarea
+          className="flex-1 p-10  h-screen focus:outline-none bg-transparent"
+          value={
+            (activeNoteId !== null &&
+              notes.find((note) => note.id === activeNoteId)?.content) ||
+            ""
+          }
+          onChange={setNoteContent}
+          spellCheck="false" // Add spellCheck="false" to disable spelling checking
+        ></textarea>
+      </div>
     </div>
   );
 }
-
-const isTitleValid = (title: string) => {
-  return title.trim() !== "";
-};
-
-interface NoteButtonProps {
-  note: Note;
-  openNote: (noteId: number) => void;
-  removeNote: (noteId: number) => void;
-  active: boolean;
-}
-
-const NoteButton: React.FC<NoteButtonProps> = ({
-  note,
-  openNote,
-  removeNote,
-  active,
-}) => {
-  const [named, setNamed] = useState<boolean>(false);
-  const [title, setTitle] = useState<string>(note.title);
-  const [hovered, setHovered] = useState<boolean>(false);
-
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(event.target.value);
-  };
-
-  const handleInputKeyPress = (
-    event: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    if (event.key === "Enter") {
-      handleInputBlur();
-      setNamed(true);
-    }
-  };
-
-  const handleInputBlur = () => {
-    if (isTitleValid(title)) {
-      setNamed(true);
-      setHovered(false);
-    } else {
-      removeNote(note.id);
-    }
-  };
-
-  const handleButtonClick = () => {
-    if (named) {
-      openNote(note.id);
-    }
-  };
-
-  if (!named) {
-    return (
-      <div>
-        <input
-          type="text"
-          className="bg-transparent w-full text-left px-5 py-2 focus:bg-gray-700"
-          autoFocus // Add autoFocus attribute to focus the input field at creation
-          value={title}
-          onChange={handleInputChange}
-          onKeyPress={handleInputKeyPress}
-          onBlur={handleInputBlur} // Add onBlur event handler to handle focus loss
-        />
-      </div>
-    );
-  }
-
-  let bgColor = "bg-gray-800";
-  if (active) {
-    bgColor = "bg-gray-700";
-  }
-  return (
-    <button
-      onClick={handleButtonClick}
-      onContextMenu={(e) => {
-        e.preventDefault(); // Prevent the context menu from opening
-        setNamed(false);
-      }}
-      className={`block w-full text-left px-5 py-2 hover:bg-gray-700 ${bgColor}`}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{ position: "relative" }} // Add position: relative to the button style
-    >
-      {title}
-      {named && (
-        <span
-          className="ml-2 absolute right-3 top-1/2 transform -translate-y-1/2"
-          onClick={() => removeNote(note.id)}
-        >
-          {hovered ? <FaRegTrashCan /> : null}
-        </span>
-      )}
-    </button>
-  );
-};
