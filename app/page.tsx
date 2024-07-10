@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { act, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 
 // Define the Note type
@@ -12,10 +12,19 @@ interface Note {
 
 export default function Home() {
   const [notes, setNotes] = useState<Note[]>([]);
-  const [activeNoteId, setActiveNoteId] = useState<Note | null>(null);
+  const [activeNoteId, setActiveNoteId] = useState<number | null>(null);
 
   const openNote = (noteId: number) => {
-    console.log(noteId);
+    setActiveNoteId(noteId);
+  };
+
+  const setNoteContent = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const content = event.target.value;
+    setNotes((prevNotes) =>
+      prevNotes.map((note) =>
+        note.id === activeNoteId ? { ...note, content } : note
+      )
+    );
   };
 
   const createNewNote = () => {
@@ -44,11 +53,20 @@ export default function Home() {
               note={note}
               openNote={openNote}
               removeNote={removeNote}
+              active={activeNoteId === note.id}
             />
           </React.Fragment>
         ))}
       </div>
-      <div className="flex-1 p-10">Your note content will appear here.</div>
+      <textarea
+        className="flex-1 p-10"
+        value={
+          (activeNoteId !== null &&
+            notes.find((note) => note.id === activeNoteId)?.content) ||
+          ""
+        }
+        onChange={setNoteContent}
+      ></textarea>
     </div>
   );
 }
@@ -61,12 +79,14 @@ interface NoteButtonProps {
   note: Note;
   openNote: (noteId: number) => void;
   removeNote: (noteId: number) => void;
+  active: boolean;
 }
 
 const NoteButton: React.FC<NoteButtonProps> = ({
   note,
   openNote,
   removeNote,
+  active,
 }) => {
   const [named, setNamed] = useState<boolean>(false);
   const [title, setTitle] = useState<string>(note.title);
@@ -116,6 +136,10 @@ const NoteButton: React.FC<NoteButtonProps> = ({
     );
   }
 
+  let bgColor = "bg-gray-800";
+  if (active) {
+    bgColor = "bg-gray-700";
+  }
   return (
     <button
       onClick={handleButtonClick}
@@ -123,7 +147,7 @@ const NoteButton: React.FC<NoteButtonProps> = ({
         e.preventDefault(); // Prevent the context menu from opening
         setNamed(false);
       }}
-      className="block w-full text-left px-5 py-2 hover:bg-gray-700"
+      className={`block w-full text-left px-5 py-2 hover:bg-gray-700 ${bgColor}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{ position: "relative" }} // Add position: relative to the button style
