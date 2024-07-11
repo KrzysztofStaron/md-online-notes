@@ -8,6 +8,7 @@ import {
 import { auth } from "../../firebase/config";
 import { useState } from "react";
 import { FaGoogle } from "react-icons/fa";
+import "../account.css";
 
 const provider = new GoogleAuthProvider();
 
@@ -88,12 +89,18 @@ const SignUp = () => {
               </div>
               <button
                 type="submit"
-                className="w-full text-white bg-cyan-600 hover:bg-cyan-700 focus:ring-4 focus:outline-none focus:ring-cyan-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-cyan-600 dark:hover:bg-cyan-700 dark:focus:ring-cyan-800"
+                className="w-full text-white bg-cyan-600 hover:bg-cyan-700 focus:ring-4 focus:outline-none focus:ring-cyan-300 font-medium rounded-xl text-sm px-5 py-2.5 text-center dark:bg-cyan-600 dark:hover:bg-cyan-700 dark:focus:ring-cyan-800"
               >
                 Create Account
               </button>
-              <button onClick={google}>
-                <FaGoogle />
+              <button
+                onClick={google}
+                className="login-with-google-btn text-black flex items-center justify-center w-full hover:bg-gray-700 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-gray-700 dark:hover:bg-gray-400 dark:focus:ring-gray-800 "
+              >
+                <div className="mr-2">
+                  <FaGoogle />
+                </div>
+                Google
               </button>
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
                 Already have an account?{" "}

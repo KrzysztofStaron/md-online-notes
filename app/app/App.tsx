@@ -6,11 +6,19 @@ import NoteButton, { Note } from "./NoteButton";
 import { signOut } from "firebase/auth";
 import { db, auth } from "../firebase/config";
 import useAuth from "../hooks/useAuth";
-import { collection, getDocs, setDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  setDoc,
+  doc,
+  deleteDoc,
+} from "firebase/firestore";
+import Markdown from "./markdown";
 
 export default function App() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [activeNoteId, setActiveNoteId] = useState<number | null>(null);
+  const [renderMode, setRenderMode] = useState(true);
   const user = useAuth();
 
   useEffect(() => {
@@ -80,7 +88,11 @@ export default function App() {
     ]);
   };
 
-  const removeNote = (noteId: number) => {
+  const removeNote = async (noteId: number) => {
+    await deleteDoc(
+      doc(db, "root", "notes", user?.uid ?? "", noteId.toString())
+    );
+
     setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
   };
 
@@ -107,47 +119,85 @@ export default function App() {
     ));
   };
 
-  return (
-    <div className="flex">
-      <div className="w-64 h-screen bg-gray-800 text-white border-r border-gray-700 overflow-scroll">
-        {getNotes()}
+  let renderArea = <></>;
+  let modeMessage = "";
+
+  if (renderMode) {
+    renderArea = (
+      <textarea
+        className="focus:outline-none bg-transparent w-full"
+        value={
+          (activeNoteId !== null &&
+            notes.find((note) => note.id === activeNoteId)?.content) ||
+          ""
+        }
+        onChange={setNoteContent}
+        spellCheck="false"
+      ></textarea>
+    );
+    modeMessage = "Code";
+  } else {
+    renderArea = (
+      <Markdown
+        text={notes.find((note) => note.id === activeNoteId)?.content ?? ""}
+      ></Markdown>
+    );
+    modeMessage = "Preview";
+  }
+
+  const ButtonMenu = () => {
+    return (
+      <div className="flex justify-between h-auto bg-slate-700 p-2">
         <button
-          onClick={createNewNote}
-          className="block w-full text-left px-5 py-2 hover:bg-gray-700"
+          onClick={() => saveNote(activeNoteId!)}
+          className="text-white ml-2 font-bold"
         >
-          <span className="flex items-center justify-center opacity-50">
-            <IoMdAdd className="" />
-          </span>
+          Save
+        </button>
+        <button
+          onClick={() => setRenderMode((prev) => !prev)}
+          className="text-white font-mono bg-slate-900 rounded-full p-4 font-bold"
+        >
+          {modeMessage}
+        </button>
+        <button
+          onClick={() => signOut(auth)}
+          className="text-white mr-2 font-bold"
+        >
+          Logout
         </button>
       </div>
-      <div className="w-full bg-slate-800 text-white">
-        <div className="flex p-2 justify-between">
+    );
+  };
+
+  return (
+    <>
+      <div className="flex h-screen">
+        <div className="w-64 bg-gray-800 text-white border-r border-gray-700">
+          {getNotes()}
           <button
-            onClick={() => saveNote(activeNoteId!)}
-            className="text-white"
+            onClick={createNewNote}
+            className="block w-full text-left px-5 py-2 hover:bg-gray-700"
           >
-            Save
-          </button>
-          <button onClick={() => signOut(auth)} className="text-white">
-            Logout
+            <span className="flex items-center justify-center opacity-50">
+              <IoMdAdd className="" />
+            </span>
           </button>
         </div>
-        <h1 className="text-2xl text-center">
-          {(activeNoteId !== null &&
-            notes.find((note) => note.id === activeNoteId)?.title) ||
-            ""}
-        </h1>
-        <textarea
-          className="flex-1 p-10 h-screen focus:outline-none bg-transparent"
-          value={
-            (activeNoteId !== null &&
-              notes.find((note) => note.id === activeNoteId)?.content) ||
-            ""
-          }
-          onChange={setNoteContent}
-          spellCheck="false"
-        ></textarea>
+
+        <div className="flex flex-col w-full">
+          <ButtonMenu />
+          <div className="overflow-scroll flex-grow w-full text-white markdown-preview ml-8 mt-8 mb-5">
+            {renderArea}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
+
+/*
+
+      <ButtonMenu></ButtonMenu>
+
+*/

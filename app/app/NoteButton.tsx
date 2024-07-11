@@ -84,7 +84,7 @@ const NoteButton: React.FC<NoteButtonProps> = ({
 
   let bgColor = "bg-gray-800";
   if (active) {
-    bgColor = "bg-gray-700";
+    bgColor = "bg-slate-700 border-b-2 border-t-2";
   }
   return (
     <button
@@ -93,7 +93,7 @@ const NoteButton: React.FC<NoteButtonProps> = ({
         e.preventDefault(); // Prevent the context menu from opening
         setNamed(false);
       }}
-      className={`block w-full text-left px-5 py-2 hover:bg-gray-700 ${bgColor}`}
+      className={`block w-full text-left px-5 py-2 hover:bg-gray-700 ${bgColor} border-gray-800 box-border`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{ position: "relative" }} // Add position: relative to the button style

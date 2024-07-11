@@ -1,0 +1,98 @@
+/* Markdown Styles */
+
+/* Headings */
+.markdown-preview {
+  h1 {
+    font-size: 2em;
+    font-weight: bold;
+  }
+
+  h2 {
+    font-size: 1.5em;
+    font-weight: bold;
+  }
+
+  h3 {
+    font-size: 1.17em;
+    font-weight: bold;
+  }
+
+  h4 {
+    font-size: 1em;
+    font-weight: bold;
+  }
+
+  h5 {
+    font-size: 0.83em;
+    font-weight: bold;
+  }
+
+  h6 {
+    font-size: 0.67em;
+    font-weight: bold;
+  }
+
+  /* Paragraphs */
+  p {
+    margin-bottom: 1em;
+  }
+
+  /* Lists */
+  ul,
+  ol {
+    margin-bottom: 1em;
+    margin-left: 2em;
+  }
+
+  li {
+    margin-bottom: 0.5em;
+  }
+
+  /* Links */
+  a {
+    color: #007bff;
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  /* Code Blocks */
+  pre {
+    background-color: #f8f9fa;
+    padding: 1em;
+    overflow: auto;
+  }
+
+  code {
+    font-family: Consolas, monospace;
+  }
+
+  /* Blockquotes */
+  blockquote {
+    margin-left: 2em;
+    padding-left: 1em;
+    border-left: 4px solid #ccc;
+  }
+
+  /* Horizontal Rule */
+  hr {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 1em 0;
+  }
+
+  pre {
+    @apply bg-slate-900;
+  }
+}
+
+body {
+  @apply bg-slate-800;
+  overflow: hidden;
+}
+
+textarea {
+  height: 99%;
+}
