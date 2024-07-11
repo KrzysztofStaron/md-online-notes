@@ -21,7 +21,7 @@ export default function App() {
   const user = useAuth();
 
   const saveNote = async (id: number) => {
-    if (user?.uid && activeNoteId !== null) {
+    if (user?.uid && id !== null) {
       console.log("stuff");
       const noteToSave = notes.find((note) => note.id === id);
       if (noteToSave) {
@@ -98,9 +98,7 @@ export default function App() {
           titleChanged={(title: string, noteId: number) =>
             setNotes((prevNotes) =>
               prevNotes.map((note) =>
-                note.id === noteId
-                  ? { ...note, title, modifiedAt: new Date().getTime() }
-                  : note
+                note.id === noteId ? { ...note, title } : note
               )
             )
           }
@@ -124,15 +122,13 @@ export default function App() {
         </button>
       </div>
       <div className="w-full bg-slate-800 text-white">
-        <div className="flex justify-start p-2">
+        <div className="flex p-2 justify-between">
           <button
             onClick={() => saveNote(activeNoteId!)}
             className="text-white"
           >
             Save
           </button>
-        </div>
-        <div className="flex justify-end p-2">
           <button onClick={() => signOut(auth)} className="text-white">
             Logout
           </button>
@@ -143,7 +139,7 @@ export default function App() {
             ""}
         </h1>
         <textarea
-          className="flex-1 p-10  h-screen focus:outline-none bg-transparent"
+          className="flex-1 p-10 h-screen focus:outline-none bg-transparent"
           value={
             (activeNoteId !== null &&
               notes.find((note) => note.id === activeNoteId)?.content) ||
