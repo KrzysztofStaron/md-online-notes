@@ -5,7 +5,7 @@ export interface Note {
   id: number; // Assuming the ID is a string, adjust the type as necessary
   title: string;
   content: string;
-  modifiedAt: Date; // Add modifiedAt property to track the modification date
+  modifiedAt: number; // Add modifiedAt property to track the modification date
 }
 
 const isTitleValid = (title: string) => {

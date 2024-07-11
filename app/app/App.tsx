@@ -1,17 +1,60 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { IoMdAdd } from "react-icons/io";
-import NoteButton from "./NoteButton";
-import { Note } from "./NoteButton";
+import NoteButton, { Note } from "./NoteButton";
 import { signOut } from "firebase/auth";
-import { auth } from "../firebase/config";
+import { db, auth } from "../firebase/config";
+import useAuth from "../hooks/useAuth";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  setDoc,
+  doc,
+} from "firebase/firestore";
 
 export default function App() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [activeNoteId, setActiveNoteId] = useState<number | null>(null);
+  const user = useAuth();
+
+  const saveNote = async (id: number) => {
+    if (user?.uid && activeNoteId !== null) {
+      console.log("stuff");
+      const noteToSave = notes.find((note) => note.id === id);
+      if (noteToSave) {
+        await setDoc(
+          doc(db, "root", "notes", user.uid, id.toString()),
+          noteToSave
+        );
+      }
+    }
+  };
+
+  const loadNotes = async () => {
+    console.log(user?.uid);
+    const querySnapshot = await getDocs(
+      collection(db, "root", "notes", user?.uid?.toString() ?? "")
+    );
+    var data: any = [];
+    querySnapshot.forEach((doc) => {
+      data.push(doc.data());
+    });
+    if (data.length) {
+      setNotes(data.map((newNote: any) => newNote as Note));
+    }
+  };
+
+  useEffect(() => {
+    if (user?.uid) {
+      loadNotes();
+    }
+  }, [user?.uid]);
 
   const openNote = (noteId: number) => {
+    saveNote(activeNoteId!);
     setActiveNoteId(noteId);
   };
 
@@ -20,7 +63,7 @@ export default function App() {
     setNotes((prevNotes) =>
       prevNotes.map((note) =>
         note.id === activeNoteId
-          ? { ...note, content, modifiedAt: new Date() }
+          ? { ...note, content, modifiedAt: new Date().getTime() }
           : note
       )
     );
@@ -33,7 +76,7 @@ export default function App() {
         id: Number(prevNotes.at(-1)?.id ?? 0) + 1,
         title: "",
         content: "",
-        modifiedAt: new Date(),
+        modifiedAt: new Date().getTime(),
       },
     ]);
   };
@@ -43,9 +86,8 @@ export default function App() {
   };
 
   const getNotes = () => {
-    const sortedNotes = [...notes].sort(
-      (a, b) => b.modifiedAt.getTime() - a.modifiedAt.getTime()
-    );
+    const sortedNotes = [...notes].sort((a, b) => b.modifiedAt - a.modifiedAt);
+
     return sortedNotes.map((note) => (
       <React.Fragment key={note.id}>
         <NoteButton
@@ -57,7 +99,7 @@ export default function App() {
             setNotes((prevNotes) =>
               prevNotes.map((note) =>
                 note.id === noteId
-                  ? { ...note, title, modifiedAt: new Date() }
+                  ? { ...note, title, modifiedAt: new Date().getTime() }
                   : note
               )
             )
@@ -82,6 +124,14 @@ export default function App() {
         </button>
       </div>
       <div className="w-full bg-slate-800 text-white">
+        <div className="flex justify-start p-2">
+          <button
+            onClick={() => saveNote(activeNoteId!)}
+            className="text-white"
+          >
+            Save
+          </button>
+        </div>
         <div className="flex justify-end p-2">
           <button onClick={() => signOut(auth)} className="text-white">
             Logout
