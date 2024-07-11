@@ -1,4 +1,4 @@
-import React, { act, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 
 export interface Note {
