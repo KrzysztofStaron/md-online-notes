@@ -6,19 +6,18 @@ import NoteButton, { Note } from "./NoteButton";
 import { signOut } from "firebase/auth";
 import { db, auth } from "../firebase/config";
 import useAuth from "../hooks/useAuth";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  setDoc,
-  doc,
-} from "firebase/firestore";
+import { collection, getDocs, setDoc, doc } from "firebase/firestore";
 
 export default function App() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [activeNoteId, setActiveNoteId] = useState<number | null>(null);
   const user = useAuth();
+
+  useEffect(() => {
+    if (activeNoteId == null) {
+      setActiveNoteId(notes[0]?.id ?? null);
+    }
+  }, [notes]);
 
   const saveNote = async (id: number) => {
     if (user?.uid && id !== null) {
