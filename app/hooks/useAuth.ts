@@ -10,7 +10,7 @@ const useAuth = () => {
       if (user) {
         setUser(user);
       } else {
-        console.log("there is no user");
+        console.log("No user is signed in.");
       }
     });
 

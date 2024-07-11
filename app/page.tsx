@@ -1,28 +1,32 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import SignUp from "./pages/SignUp";
-import useAuth from "./hooks/useAuth";
+import { useEffect, useState } from "react";
 import App from "./app/App";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "./firebase/config";
 
 const Loader = () => {
-  const [authenticated, setAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(0);
-  const auth = useAuth();
+  const [authenticated, setAuthenticated] = useState("loading");
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      setAuthenticated("true");
+    } else {
+      setAuthenticated("false");
+    }
+  });
 
   useEffect(() => {
-    setAuthenticated(auth != null);
-    setLoading(loading + 1);
-  }, [auth]);
+    console.log(authenticated);
+    if (authenticated === "false") {
+      window.location.href = "auth/signIn";
+    }
+  }, [authenticated]);
 
-  if (loading < 2) {
-    return <div>Loading...</div>;
-  }
-
-  if (authenticated) {
+  if (authenticated === "true") {
     return <App />;
   } else {
-    return <SignUp />;
+    return <div className="bg-gray-900 w-screen h-screen "></div>;
   }
 };
 

@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { IoMdAdd } from "react-icons/io";
 import NoteButton from "./NoteButton";
 import { Note } from "./NoteButton";
+import { signOut } from "firebase/auth";
+import { auth } from "../firebase/config";
 
 export default function App() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -80,6 +82,11 @@ export default function App() {
         </button>
       </div>
       <div className="w-full bg-slate-800 text-white">
+        <div className="flex justify-end p-2">
+          <button onClick={() => signOut(auth)} className="text-white">
+            Logout
+          </button>
+        </div>
         <h1 className="text-2xl text-center">
           {(activeNoteId !== null &&
             notes.find((note) => note.id === activeNoteId)?.title) ||
