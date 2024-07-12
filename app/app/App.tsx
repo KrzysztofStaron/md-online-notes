@@ -2,6 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { IoMdAdd } from "react-icons/io";
+import { IoExitOutline } from "react-icons/io5";
+import { LiaSave } from "react-icons/lia";
+import { FaRegFileAlt } from "react-icons/fa";
+import { FaCode } from "react-icons/fa6";
+
 import NoteButton, { Note } from "./NoteButton";
 import { signOut } from "firebase/auth";
 import { db, auth } from "../firebase/config";
@@ -65,6 +70,15 @@ export default function App() {
     setActiveNoteId(noteId);
   };
 
+  const setTitle = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const title = event.target.value;
+    setNotes((prevNotes) =>
+      prevNotes.map((note) =>
+        note.id === activeNoteId ? { ...note, title } : note
+      )
+    );
+  };
+
   const setNoteContent = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     const content = event.target.value;
     setNotes((prevNotes) =>
@@ -120,7 +134,6 @@ export default function App() {
   };
 
   let renderArea = <></>;
-  let modeMessage = "";
 
   if (renderMode) {
     renderArea = (
@@ -135,36 +148,47 @@ export default function App() {
         spellCheck="false"
       ></textarea>
     );
-    modeMessage = "Code";
   } else {
     renderArea = (
       <Markdown
         text={notes.find((note) => note.id === activeNoteId)?.content ?? ""}
       ></Markdown>
     );
-    modeMessage = "Preview";
   }
 
   const ButtonMenu = () => {
     return (
-      <div className="flex justify-between h-auto bg-slate-700 p-2">
-        <button
-          onClick={() => saveNote(activeNoteId!)}
-          className="text-white ml-2 font-bold"
-        >
-          Save
-        </button>
-        <button
-          onClick={() => setRenderMode((prev) => !prev)}
-          className="text-white font-mono bg-slate-900 rounded-full p-4 font-bold"
-        >
-          {modeMessage}
-        </button>
+      <div className="flex justify-between bg-slate-700 h-12 border-gray-600 border-b-2">
+        <div className="flex h-12">
+          <button
+            onClick={() => saveNote(activeNoteId!)}
+            className="text-white font-bold flex items-center justify-center text-2xl bg-slate-800 w-12 border-r-2 border-gray-600"
+          >
+            <LiaSave />
+          </button>
+          <button
+            onClick={() => setRenderMode((prev) => true)}
+            className={`text-white font-mono w-20 flex items-center justify-center ${
+              renderMode && "bg-slate-800"
+            }`}
+          >
+            <FaRegFileAlt />
+          </button>
+          <button
+            onClick={() => setRenderMode((prev) => false)}
+            className={`text-white font-mono w-20 flex items-center justify-center ${
+              !renderMode && "bg-slate-800"
+            }`}
+          >
+            Prev
+          </button>
+        </div>
+
         <button
           onClick={() => signOut(auth)}
-          className="text-white mr-2 font-bold"
+          className="text-white mr-2 font-bold flex items-center justify-center text-2xl"
         >
-          Logout
+          <IoExitOutline />
         </button>
       </div>
     );
@@ -187,6 +211,12 @@ export default function App() {
 
         <div className="flex flex-col w-full">
           <ButtonMenu />
+          <input
+            type="text"
+            className="text-center text-3xl bg-transparent text-white focus:outline-none mt-3"
+            onChange={setTitle}
+            value={notes.find((note) => note.id === activeNoteId)?.title}
+          />
           <div className="overflow-scroll flex-grow w-full text-white markdown-preview ml-8 mt-8 mb-5">
             {renderArea}
           </div>
@@ -195,9 +225,3 @@ export default function App() {
     </>
   );
 }
-
-/*
-
-      <ButtonMenu></ButtonMenu>
-
-*/

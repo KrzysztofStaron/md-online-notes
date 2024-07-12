@@ -37,6 +37,10 @@ const NoteButton: React.FC<NoteButtonProps> = ({
     titleChanged(title, note.id);
   }, [title]);
 
+  useEffect(() => {
+    setTitle(note.title);
+  }, [note.title]);
+
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(event.target.value);
   };
@@ -104,7 +108,7 @@ const NoteButton: React.FC<NoteButtonProps> = ({
           className="ml-2 absolute right-3 top-1/2 transform -translate-y-1/2"
           onClick={() => removeNote(note.id)}
         >
-          {hovered ? <FaRegTrashCan /> : null}
+          {hovered || active ? <FaRegTrashCan /> : null}
         </span>
       )}
     </button>
