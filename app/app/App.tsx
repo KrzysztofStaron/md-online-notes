@@ -7,6 +7,7 @@ import { LiaSave } from "react-icons/lia";
 import { FaRegFileAlt, FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { MdFileDownload } from "react-icons/md";
 import { FaCode } from "react-icons/fa6";
+import { MdOutlinePublish } from "react-icons/md";
 
 import NoteButton, { Note } from "./NoteButton";
 import { signOut } from "firebase/auth";
@@ -108,15 +109,13 @@ export default function App() {
     });
 
     for (var pub of published) {
-      const querySnapshot2 = await getDocs(
-        query(collection(db, pub.owner), where("id", "==", pub.ownerId))
-      );
-
-      console.log(querySnapshot2);
+      const querySnapshot2 = await getDocs(collection(db, pub.owner));
 
       querySnapshot2.forEach((doc2) => {
         let newData = doc2.data();
-        console.log(newData);
+        if (newData.id != pub.ownerId) {
+          return;
+        }
 
         newData.canSave = false;
         newData.id = pub.id;
@@ -263,6 +262,15 @@ export default function App() {
             className="text-white font-mono w-20 flex items-center justify-center text-lg border-gray-600 hover:bg-slate-600 active:bg-slate-900"
           >
             <MdFileDownload />
+          </button>
+          <button
+            onClick={() => {
+              let copyText = `${window.location.origin}/view?data=${user?.uid};${activeNoteId}`;
+              navigator.clipboard.writeText(copyText);
+            }}
+            className="text-white font-mono w-20 flex items-center justify-center text-lg border-gray-600 hover:bg-slate-600 active:bg-slate-900"
+          >
+            <MdOutlinePublish />
           </button>
         </div>
 

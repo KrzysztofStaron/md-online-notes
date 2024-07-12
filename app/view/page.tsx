@@ -45,8 +45,6 @@ const view = () => {
 
     setMax(maxId);
   };
-
-  window.location.href = "/";
 };
 
 export default view;
