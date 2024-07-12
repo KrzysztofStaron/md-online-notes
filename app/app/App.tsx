@@ -57,6 +57,12 @@ export default function App() {
   };
 
   useEffect(() => {
+    if (!getNoteById(activeNoteId!)?.canSave) {
+      setRenderMode(false);
+    }
+  }, [activeNoteId]);
+
+  useEffect(() => {
     if (activeNoteId == null) {
       setActiveNoteId(notes[0]?.id ?? null);
     }
@@ -238,17 +244,38 @@ export default function App() {
   }
 
   const ButtonMenu = () => {
+    let buttonCode = (
+      <button
+        onClick={() => setRenderMode(true)}
+        className={`text-white font-mono w-20 flex items-center justify-center text-lg border-gray-600 ${
+          renderMode && "bg-slate-800 border-r-2"
+        } ${!renderMode && "hover:bg-slate-600"}`}
+      >
+        <FaCode />
+      </button>
+    );
+
+    let buttonPublish = (
+      <button
+        onClick={() => {
+          let copyText = `${window.location.origin}/view?data=${user?.uid};${activeNoteId}`;
+          navigator.clipboard.writeText(copyText);
+        }}
+        className="text-white font-mono w-20 flex items-center justify-center text-lg border-gray-600 hover:bg-slate-600 active:bg-slate-900"
+      >
+        <MdOutlinePublish />
+      </button>
+    );
+
+    if (getNoteById(activeNoteId!)?.canSave === false) {
+      buttonCode = <></>;
+      buttonPublish = <></>;
+    }
+
     return (
       <div className="flex justify-between bg-slate-700 h-12 border-gray-600 border-b-2">
         <div className="flex h-12">
-          <button
-            onClick={() => setRenderMode(true)}
-            className={`text-white font-mono w-20 flex items-center justify-center text-lg border-gray-600 ${
-              renderMode && "bg-slate-800 border-r-2"
-            } ${!renderMode && "hover:bg-slate-600"}`}
-          >
-            <FaCode />
-          </button>
+          {buttonCode}
           <button
             onClick={() => setRenderMode(false)}
             className={`text-white font-mono w-20 flex items-center justify-center text-lg border-gray-600 ${
@@ -263,15 +290,7 @@ export default function App() {
           >
             <MdFileDownload />
           </button>
-          <button
-            onClick={() => {
-              let copyText = `${window.location.origin}/view?data=${user?.uid};${activeNoteId}`;
-              navigator.clipboard.writeText(copyText);
-            }}
-            className="text-white font-mono w-20 flex items-center justify-center text-lg border-gray-600 hover:bg-slate-600 active:bg-slate-900"
-          >
-            <MdOutlinePublish />
-          </button>
+          {buttonPublish}
         </div>
 
         <button
