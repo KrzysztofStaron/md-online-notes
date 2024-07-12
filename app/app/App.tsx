@@ -18,6 +18,9 @@ import {
   setDoc,
   doc,
   deleteDoc,
+  where,
+  query,
+  collectionGroup,
 } from "firebase/firestore";
 import Markdown from "./markdown";
 
@@ -26,9 +29,26 @@ export default function App() {
   const [activeNoteId, setActiveNoteId] = useState<number | null>(null);
   const [renderMode, setRenderMode] = useState(true);
   const [leftMenuState, setLeftMenuState] = useState(true);
-  const [forceNamed, setforceNamed] = useState(true);
   const user = useAuth();
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("data") === null) return;
+
+    const data = urlParams.get("data")!.split(";");
+
+    const noteToSave = {
+      owner: data[0],
+      ownerId: data[1],
+      id: Number(notes.at(-1)?.id ?? 0) + 1,
+    };
+
+    setDoc(doc(db, user?.uid, noteToSave.id.toString()), noteToSave);
+  }, [user]);
 
   const mdToPdf = async () => {
     const md = getNoteById(activeNoteId!)?.content;
@@ -67,30 +87,61 @@ export default function App() {
 
   const saveNote = async (id: number) => {
     if (user?.uid && id !== null) {
-      console.log("stuff");
-      const noteToSave = notes.find((note) => note.id === id);
+      let noteToSave = getNoteById(id);
+      if (!noteToSave?.canSave) {
+        return;
+      }
+
+      noteToSave.content = (
+        document.getElementById("textarea") as HTMLTextAreaElement
+      )?.value;
+
       if (noteToSave) {
-        await setDoc(
-          doc(db, "root", "notes", user.uid, id.toString()),
-          noteToSave
-        );
+        await setDoc(doc(db, user.uid, id.toString()), noteToSave);
       }
     }
   };
 
   const loadNotes = async () => {
     console.log(user?.uid);
-    const querySnapshot = await getDocs(
-      collection(db, "root", "notes", user?.uid?.toString() ?? "")
-    );
+    const querySnapshot = await getDocs(collection(db, user?.uid?.toString()!));
     var data: any = [];
-    querySnapshot.forEach((doc) => {
-      data.push(doc.data());
+    let published: any[] = [];
+
+    querySnapshot.forEach(async (doc) => {
+      if (doc.data().hasOwnProperty("owner")) {
+        console.log(doc.data());
+        published.push(doc.data());
+      } else {
+        let newData = doc.data();
+        if (!doc.data().hasOwnProperty("canSave")) {
+          newData.canSave = true;
+        }
+        data.push(newData);
+      }
     });
+
+    console.log(published);
+
+    for (var pub of published) {
+      const querySnapshot2 = await getDocs(
+        query(collection(db, pub.owner), where("id", "==", pub.ownerId))
+      );
+
+      console.log(querySnapshot2);
+
+      querySnapshot2.forEach((doc2) => {
+        let newData = doc2.data();
+        console.log(newData);
+
+        newData.canSave = false;
+        newData.id = pub.id;
+        data.push(newData);
+      });
+    }
     if (data.length) {
       setNotes(data.map((newNote: any) => newNote as Note));
     }
-    setforceNamed(true);
   };
 
   const openNote = (noteId: number) => {
@@ -114,7 +165,7 @@ export default function App() {
 
     debounceTimeout.current = setTimeout(() => {
       saveNote(id);
-    }, 1500);
+    }, 1000);
   };
 
   const setNoteContent = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -138,6 +189,7 @@ export default function App() {
         title: "",
         content: "",
         modifiedAt: new Date().getTime(),
+        canSave: true,
       },
     ]);
   };
@@ -147,7 +199,7 @@ export default function App() {
   };
 
   const removeNote = async (noteId: number) => {
-    await deleteDoc(doc(db, "root", "notes", user?.uid!, noteId.toString()));
+    await deleteDoc(doc(db, user?.uid!, noteId.toString()));
 
     setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
   };
@@ -175,7 +227,6 @@ export default function App() {
             );
           }}
           setActiveNoteId={setActiveNoteId}
-          forceNamed={forceNamed}
         />
       </React.Fragment>
     ));
@@ -246,6 +297,7 @@ export default function App() {
     renderArea = (
       <textarea
         className="focus:outline-none bg-transparent w-full"
+        id="textarea"
         value={
           (activeNoteId !== null && getNoteById(activeNoteId!)?.content) || ""
         }

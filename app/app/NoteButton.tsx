@@ -6,6 +6,7 @@ export interface Note {
   title: string;
   content: string;
   modifiedAt: number; // Add modifiedAt property to track the modification date
+  canSave: boolean;
 }
 
 const isTitleValid = (title: string) => {
@@ -19,7 +20,6 @@ interface NoteButtonProps {
   active: boolean;
   titleChanged: (title: string, id: number) => void;
   setActiveNoteId: (id: number) => void;
-  forceNamed: boolean;
 }
 
 const NoteButton: React.FC<NoteButtonProps> = ({
@@ -29,15 +29,10 @@ const NoteButton: React.FC<NoteButtonProps> = ({
   active,
   titleChanged,
   setActiveNoteId,
-  forceNamed,
 }) => {
   const [named, setNamed] = useState<boolean>(false);
   const [title, setTitle] = useState<string>(note.title);
   const [hovered, setHovered] = useState<boolean>(false);
-
-  useEffect(() => {
-    setNamed(forceNamed);
-  }, [forceNamed]);
 
   useEffect(() => {
     titleChanged(title, note.id);
@@ -81,7 +76,9 @@ const NoteButton: React.FC<NoteButtonProps> = ({
       <div>
         <input
           type="text"
-          className="bg-transparent w-full text-left px-5 py-2 focus:bg-gray-700 focus:outline-none"
+          className={`bg-transparent w-full text-left px-5 py-2 focus:bg-gray-700 focus:outline-none ${
+            !note.canSave && "text-red-500"
+          }`}
           autoFocus // Add autoFocus attribute to focus the input field at creation
           value={title}
           onChange={handleInputChange}
@@ -105,7 +102,9 @@ const NoteButton: React.FC<NoteButtonProps> = ({
       }}
       className={`block w-full text-left px-5 py-2 ${
         !active && "hover:bg-gray-700"
-      } ${bgColor} border-gray-800 box-border`}
+      } ${bgColor} border-gray-800 box-border ${
+        !note.canSave && "text-red-500"
+      }`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{ position: "relative" }} // Add position: relative to the button style
