@@ -35,7 +35,15 @@ const NoteButton: React.FC<NoteButtonProps> = ({
   const [hovered, setHovered] = useState<boolean>(false);
 
   useEffect(() => {
-    titleChanged(title, note.id);
+    if (note.title != "") {
+      setNamed(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (title != "") {
+      titleChanged(title, note.id);
+    }
   }, [title]);
 
   useEffect(() => {

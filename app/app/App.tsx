@@ -32,24 +32,6 @@ export default function App() {
   const user = useAuth();
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    if (!user) {
-      return;
-    }
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get("data") === null) return;
-
-    const data = urlParams.get("data")!.split(";");
-
-    const noteToSave = {
-      owner: data[0],
-      ownerId: data[1],
-      id: Number(notes.at(-1)?.id ?? 0) + 1,
-    };
-
-    setDoc(doc(db, user?.uid, noteToSave.id.toString()), noteToSave);
-  }, [user]);
-
   const mdToPdf = async () => {
     const md = getNoteById(activeNoteId!)?.content;
 
@@ -88,13 +70,18 @@ export default function App() {
   const saveNote = async (id: number) => {
     if (user?.uid && id !== null) {
       let noteToSave = getNoteById(id);
+
+      const extractedValue =
+        (document.getElementById("codearea") as HTMLTextAreaElement)?.value ??
+        "";
+
       if (!noteToSave?.canSave) {
         return;
       }
 
-      noteToSave.content = (
-        document.getElementById("textarea") as HTMLTextAreaElement
-      )?.value;
+      if (extractedValue != "" && id === activeNoteId) {
+        noteToSave.content = extractedValue;
+      }
 
       if (noteToSave) {
         await setDoc(doc(db, user.uid, id.toString()), noteToSave);
@@ -110,7 +97,6 @@ export default function App() {
 
     querySnapshot.forEach(async (doc) => {
       if (doc.data().hasOwnProperty("owner")) {
-        console.log(doc.data());
         published.push(doc.data());
       } else {
         let newData = doc.data();
@@ -120,8 +106,6 @@ export default function App() {
         data.push(newData);
       }
     });
-
-    console.log(published);
 
     for (var pub of published) {
       const querySnapshot2 = await getDocs(
@@ -142,10 +126,11 @@ export default function App() {
     if (data.length) {
       setNotes(data.map((newNote: any) => newNote as Note));
     }
+    console.log(data.map((newNote: any) => newNote.content));
   };
 
   const openNote = (noteId: number) => {
-    saveNote(activeNoteId!);
+    saveNote(noteId);
     setActiveNoteId(noteId);
   };
 
@@ -297,7 +282,7 @@ export default function App() {
     renderArea = (
       <textarea
         className="focus:outline-none bg-transparent w-full"
-        id="textarea"
+        id="codearea"
         value={
           (activeNoteId !== null && getNoteById(activeNoteId!)?.content) || ""
         }
