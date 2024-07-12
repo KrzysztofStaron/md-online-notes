@@ -19,11 +19,9 @@ import {
   setDoc,
   doc,
   deleteDoc,
-  where,
-  query,
-  collectionGroup,
 } from "firebase/firestore";
 import Markdown from "./markdown";
+import { get } from "https";
 
 export default function App() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -59,6 +57,8 @@ export default function App() {
   useEffect(() => {
     if (!getNoteById(activeNoteId!)?.canSave) {
       setRenderMode(false);
+    } else {
+      setRenderMode(true);
     }
   }, [activeNoteId]);
 
@@ -74,9 +74,22 @@ export default function App() {
     }
   }, [user?.uid]);
 
+  const saveNoteByObject = async (obj: Note) => {
+    if (user?.uid && obj !== null) {
+      if (!obj?.canSave) {
+        return;
+      }
+
+      if (obj) {
+        await setDoc(doc(db, user.uid, obj.id.toString()), obj);
+      }
+    }
+  };
+
   const saveNote = async (id: number) => {
     if (user?.uid && id !== null) {
       let noteToSave = getNoteById(id);
+      console.log("Saving note", noteToSave?.title);
 
       const extractedValue =
         (document.getElementById("codearea") as HTMLTextAreaElement)?.value ??
@@ -146,6 +159,7 @@ export default function App() {
         note.id === activeNoteId ? { ...note, title } : note
       )
     );
+    saveNote(activeNoteId!);
   };
 
   const debounceSaveNote = (id: number) => {
@@ -209,12 +223,14 @@ export default function App() {
           removeNote={removeNote}
           active={activeNoteId === note.id}
           titleChanged={(title: string, noteId: number) => {
-            saveNote(note.id);
             setNotes((prevNotes) =>
               prevNotes.map((note) =>
                 note.id === noteId ? { ...note, title } : note
               )
             );
+            var newNote = getNoteById(noteId)!;
+            newNote.title = title;
+            saveNoteByObject(newNote);
           }}
           setActiveNoteId={setActiveNoteId}
         />
