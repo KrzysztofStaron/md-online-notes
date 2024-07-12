@@ -26,6 +26,7 @@ export default function App() {
   const [activeNoteId, setActiveNoteId] = useState<number | null>(null);
   const [renderMode, setRenderMode] = useState(true);
   const [leftMenuState, setLeftMenuState] = useState(true);
+  const [antiRemoveFlag, setAntiRemoveFlag] = useState(false);
   const user = useAuth();
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -87,7 +88,7 @@ export default function App() {
   const saveNote = async (id: number) => {
     if (user?.uid && id !== null) {
       let noteToSave = getNoteById(id);
-      console.log("Saving note", noteToSave?.title);
+      console.log("Saving: ", id);
 
       const extractedValue =
         (document.getElementById("codearea") as HTMLTextAreaElement)?.value ??
@@ -146,7 +147,6 @@ export default function App() {
   };
 
   const openNote = (noteId: number) => {
-    saveNote(noteId);
     setActiveNoteId(noteId);
   };
 
@@ -201,8 +201,8 @@ export default function App() {
   };
 
   const removeNote = async (noteId: number) => {
+    console.log("remove", noteId);
     await deleteDoc(doc(db, user?.uid!, noteId.toString()));
-
     setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
   };
 
