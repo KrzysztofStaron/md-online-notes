@@ -5,8 +5,9 @@ import { IoMdAdd } from "react-icons/io";
 import { IoExitOutline } from "react-icons/io5";
 import { LiaSave } from "react-icons/lia";
 import { FaRegFileAlt, FaArrowLeft, FaArrowRight } from "react-icons/fa";
-
+import { MdFileDownload } from "react-icons/md";
 import { FaCode } from "react-icons/fa6";
+
 import NoteButton, { Note } from "./NoteButton";
 import { signOut } from "firebase/auth";
 import { db, auth } from "../firebase/config";
@@ -25,8 +26,31 @@ export default function App() {
   const [activeNoteId, setActiveNoteId] = useState<number | null>(null);
   const [renderMode, setRenderMode] = useState(true);
   const [leftMenuState, setLeftMenuState] = useState(true);
-  const [justLoaded, setJustLoaded] = useState(true);
+  const [forceNamed, setforceNamed] = useState(true);
   const user = useAuth();
+
+  const mdToPdf = async () => {
+    const md = notes.find((note) => note.id === activeNoteId)?.content;
+
+    const response = await fetch("https://md-to-pdf.fly.dev", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ markdown: md ?? "" }),
+    });
+
+    if (response.ok) {
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "md-to-pdf.pdf";
+      link.click();
+    } else {
+      console.error("Failed to convert markdown to PDF");
+    }
+  };
 
   useEffect(() => {
     if (activeNoteId == null) {
@@ -65,6 +89,7 @@ export default function App() {
     if (data.length) {
       setNotes(data.map((newNote: any) => newNote as Note));
     }
+    setforceNamed(true);
   };
 
   const openNote = (noteId: number) => {
@@ -135,12 +160,10 @@ export default function App() {
             );
           }}
           setActiveNoteId={setActiveNoteId}
-          forceNamed={justLoaded}
+          forceNamed={forceNamed}
         />
       </React.Fragment>
     ));
-
-    setJustLoaded(false);
   };
 
   let titleInput = (
@@ -174,6 +197,7 @@ export default function App() {
           >
             <LiaSave />
           </button>
+
           <button
             onClick={() => setRenderMode(true)}
             className={`text-white font-mono w-20 flex items-center justify-center text-lg border-gray-600 ${
@@ -189,6 +213,12 @@ export default function App() {
             } ${renderMode && "hover:bg-slate-600"}`}
           >
             <FaRegFileAlt />
+          </button>
+          <button
+            onClick={mdToPdf}
+            className="text-white font-mono w-20 flex items-center justify-center text-lg border-gray-600 hover:bg-slate-600 active:bg-slate-900"
+          >
+            <MdFileDownload />
           </button>
         </div>
 
