@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, use } from "react";
 import { IoMdAdd } from "react-icons/io";
 import { IoExitOutline } from "react-icons/io5";
-import { LiaSave } from "react-icons/lia";
 import { FaRegFileAlt, FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { MdFileDownload } from "react-icons/md";
 import { FaCode } from "react-icons/fa6";
@@ -21,7 +20,6 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 import Markdown from "./markdown";
-import { get } from "https";
 
 export default function App() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -127,7 +125,7 @@ export default function App() {
       }
     });
 
-    for (var pub of published) {
+    for (let pub of published) {
       const querySnapshot2 = await getDocs(collection(db, pub.owner));
 
       querySnapshot2.forEach((doc2) => {
