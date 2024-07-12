@@ -28,6 +28,7 @@ export default function App() {
   const [leftMenuState, setLeftMenuState] = useState(true);
   const [forceNamed, setforceNamed] = useState(true);
   const user = useAuth();
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const mdToPdf = async () => {
     const md = notes.find((note) => note.id === activeNoteId)?.content;
@@ -106,7 +107,19 @@ export default function App() {
     );
   };
 
+  const debounceSaveNote = (id: number) => {
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+
+    debounceTimeout.current = setTimeout(() => {
+      saveNote(id);
+    }, 1500);
+  };
+
   const setNoteContent = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    debounceSaveNote(activeNoteId!);
+
     const content = event.target.value;
     setNotes((prevNotes) =>
       prevNotes.map((note) =>
@@ -191,13 +204,6 @@ export default function App() {
     return (
       <div className="flex justify-between bg-slate-700 h-12 border-gray-600 border-b-2">
         <div className="flex h-12">
-          <button
-            onClick={() => saveNote(activeNoteId!)}
-            className="text-white font-bold flex items-center justify-center text-2xl bg-slate-800 w-12 border-r-2 border-gray-600 hover:bg-slate-900 active:bg-slate-900"
-          >
-            <LiaSave />
-          </button>
-
           <button
             onClick={() => setRenderMode(true)}
             className={`text-white font-mono w-20 flex items-center justify-center text-lg border-gray-600 ${
