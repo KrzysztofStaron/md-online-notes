@@ -31,7 +31,7 @@ export default function App() {
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const mdToPdf = async () => {
-    const md = notes.find((note) => note.id === activeNoteId)?.content;
+    const md = getNoteById(activeNoteId!)?.content;
 
     const response = await fetch("https://md-to-pdf.fly.dev", {
       method: "POST",
@@ -142,10 +142,12 @@ export default function App() {
     ]);
   };
 
+  const getNoteById = (id: number) => {
+    return notes.find((note) => note.id === id);
+  };
+
   const removeNote = async (noteId: number) => {
-    await deleteDoc(
-      doc(db, "root", "notes", user?.uid ?? "", noteId.toString())
-    );
+    await deleteDoc(doc(db, "root", "notes", user?.uid!, noteId.toString()));
 
     setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
   };
@@ -184,7 +186,7 @@ export default function App() {
       type="text"
       className={`text-center text-3xl bg-transparent text-white focus:outline-none mt-3`}
       onChange={setTitle}
-      value={notes.find((note) => note.id === activeNoteId)?.title || ""}
+      value={getNoteById(activeNoteId!)?.title || ""}
     />
   );
 
@@ -194,7 +196,7 @@ export default function App() {
         type="text"
         className={`text-center text-3xl bg-transparent text-white focus:outline-none mt-3`}
         onChange={setTitle}
-        value={notes.find((note) => note.id === activeNoteId)?.title || ""}
+        value={getNoteById(activeNoteId!)?.title || ""}
         disabled
       />
     );
@@ -245,9 +247,7 @@ export default function App() {
       <textarea
         className="focus:outline-none bg-transparent w-full"
         value={
-          (activeNoteId !== null &&
-            notes.find((note) => note.id === activeNoteId)?.content) ||
-          ""
+          (activeNoteId !== null && getNoteById(activeNoteId!)?.content) || ""
         }
         onChange={setNoteContent}
         spellCheck="false"
@@ -255,9 +255,7 @@ export default function App() {
     );
   } else {
     renderArea = (
-      <Markdown
-        text={notes.find((note) => note.id === activeNoteId)?.content ?? ""}
-      ></Markdown>
+      <Markdown text={getNoteById(activeNoteId!)?.content ?? ""}></Markdown>
     );
   }
 
