@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { IoMdAdd } from "react-icons/io";
 import { IoExitOutline } from "react-icons/io5";
 import { LiaSave } from "react-icons/lia";
-import { FaRegFileAlt } from "react-icons/fa";
-import { FaCode } from "react-icons/fa6";
+import { FaRegFileAlt, FaArrowLeft, FaArrowRight } from "react-icons/fa";
 
+import { FaCode } from "react-icons/fa6";
 import NoteButton, { Note } from "./NoteButton";
 import { signOut } from "firebase/auth";
 import { db, auth } from "../firebase/config";
@@ -24,6 +24,8 @@ export default function App() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [activeNoteId, setActiveNoteId] = useState<number | null>(null);
   const [renderMode, setRenderMode] = useState(true);
+  const [leftMenuState, setLeftMenuState] = useState(true);
+  const [justLoaded, setJustLoaded] = useState(true);
   const user = useAuth();
 
   useEffect(() => {
@@ -31,6 +33,12 @@ export default function App() {
       setActiveNoteId(notes[0]?.id ?? null);
     }
   }, [notes]);
+
+  useEffect(() => {
+    if (user?.uid) {
+      loadNotes();
+    }
+  }, [user?.uid]);
 
   const saveNote = async (id: number) => {
     if (user?.uid && id !== null) {
@@ -58,12 +66,6 @@ export default function App() {
       setNotes(data.map((newNote: any) => newNote as Note));
     }
   };
-
-  useEffect(() => {
-    if (user?.uid) {
-      loadNotes();
-    }
-  }, [user?.uid]);
 
   const openNote = (noteId: number) => {
     saveNote(activeNoteId!);
@@ -110,6 +112,10 @@ export default function App() {
     setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
   };
 
+  const toggleLeftMenu = () => {
+    setLeftMenuState(!leftMenuState);
+  };
+
   const getNotes = () => {
     const sortedNotes = [...notes].sort((a, b) => b.modifiedAt - a.modifiedAt);
 
@@ -120,17 +126,80 @@ export default function App() {
           openNote={openNote}
           removeNote={removeNote}
           active={activeNoteId === note.id}
-          titleChanged={(title: string, noteId: number) =>
+          titleChanged={(title: string, noteId: number) => {
+            saveNote(note.id);
             setNotes((prevNotes) =>
               prevNotes.map((note) =>
                 note.id === noteId ? { ...note, title } : note
               )
-            )
-          }
+            );
+          }}
           setActiveNoteId={setActiveNoteId}
+          forceNamed={justLoaded}
         />
       </React.Fragment>
     ));
+
+    setJustLoaded(false);
+  };
+
+  let titleInput = (
+    <input
+      type="text"
+      className={`text-center text-3xl bg-transparent text-white focus:outline-none mt-3`}
+      onChange={setTitle}
+      value={notes.find((note) => note.id === activeNoteId)?.title || ""}
+    />
+  );
+
+  if (notes.length === 0) {
+    titleInput = (
+      <input
+        type="text"
+        className={`text-center text-3xl bg-transparent text-white focus:outline-none mt-3`}
+        onChange={setTitle}
+        value={notes.find((note) => note.id === activeNoteId)?.title || ""}
+        disabled
+      />
+    );
+  }
+
+  const ButtonMenu = () => {
+    return (
+      <div className="flex justify-between bg-slate-700 h-12 border-gray-600 border-b-2">
+        <div className="flex h-12">
+          <button
+            onClick={() => saveNote(activeNoteId!)}
+            className="text-white font-bold flex items-center justify-center text-2xl bg-slate-800 w-12 border-r-2 border-gray-600 hover:bg-slate-900 active:bg-slate-900"
+          >
+            <LiaSave />
+          </button>
+          <button
+            onClick={() => setRenderMode(true)}
+            className={`text-white font-mono w-20 flex items-center justify-center text-lg border-gray-600 ${
+              renderMode && "bg-slate-800 border-r-2"
+            } ${!renderMode && "hover:bg-slate-600"}`}
+          >
+            <FaCode />
+          </button>
+          <button
+            onClick={() => setRenderMode(false)}
+            className={`text-white font-mono w-20 flex items-center justify-center text-lg border-gray-600 ${
+              !renderMode && "bg-slate-800 border-l-2 border-r-2"
+            } ${renderMode && "hover:bg-slate-600"}`}
+          >
+            <FaRegFileAlt />
+          </button>
+        </div>
+
+        <button
+          onClick={() => signOut(auth)}
+          className="text-white mr-2 font-bold flex items-center justify-center text-2xl"
+        >
+          <IoExitOutline />
+        </button>
+      </div>
+    );
   };
 
   let renderArea = <></>;
@@ -156,49 +225,24 @@ export default function App() {
     );
   }
 
-  const ButtonMenu = () => {
-    return (
-      <div className="flex justify-between bg-slate-700 h-12 border-gray-600 border-b-2">
-        <div className="flex h-12">
-          <button
-            onClick={() => saveNote(activeNoteId!)}
-            className="text-white font-bold flex items-center justify-center text-2xl bg-slate-800 w-12 border-r-2 border-gray-600"
-          >
-            <LiaSave />
-          </button>
-          <button
-            onClick={() => setRenderMode((prev) => true)}
-            className={`text-white font-mono w-20 flex items-center justify-center ${
-              renderMode && "bg-slate-800"
-            }`}
-          >
-            <FaRegFileAlt />
-          </button>
-          <button
-            onClick={() => setRenderMode((prev) => false)}
-            className={`text-white font-mono w-20 flex items-center justify-center ${
-              !renderMode && "bg-slate-800"
-            }`}
-          >
-            Prev
-          </button>
-        </div>
-
-        <button
-          onClick={() => signOut(auth)}
-          className="text-white mr-2 font-bold flex items-center justify-center text-2xl"
-        >
-          <IoExitOutline />
-        </button>
-      </div>
-    );
-  };
-
   return (
     <>
       <div className="flex h-screen">
-        <div className="w-64 bg-gray-800 text-white border-r border-gray-700">
-          {getNotes()}
+        <div
+          className={`${leftMenuState && "w-64"} ${
+            !leftMenuState && "w-10"
+          } bg-gray-800 text-white border-r border-gray-600`}
+        >
+          <button
+            className={`block w-full ${!leftMenuState && "h-full"}`}
+            onClick={toggleLeftMenu}
+          >
+            <span className="flex items-center justify-end mr-2 mt-2 mb-2">
+              {leftMenuState && <FaArrowLeft />}
+              {!leftMenuState && <FaArrowRight />}
+            </span>
+          </button>
+          <span className={`${!leftMenuState && "hidden"}`}>{getNotes()}</span>
           <button
             onClick={createNewNote}
             className="block w-full text-left px-5 py-2 hover:bg-gray-700"
@@ -211,12 +255,7 @@ export default function App() {
 
         <div className="flex flex-col w-full">
           <ButtonMenu />
-          <input
-            type="text"
-            className="text-center text-3xl bg-transparent text-white focus:outline-none mt-3"
-            onChange={setTitle}
-            value={notes.find((note) => note.id === activeNoteId)?.title}
-          />
+          {titleInput}
           <div className="overflow-scroll flex-grow w-full text-white markdown-preview ml-8 mt-8 mb-5">
             {renderArea}
           </div>

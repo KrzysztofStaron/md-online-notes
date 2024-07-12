@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 
 export interface Note {
@@ -19,6 +19,7 @@ interface NoteButtonProps {
   active: boolean;
   titleChanged: (title: string, id: number) => void;
   setActiveNoteId: (id: number) => void;
+  forceNamed: boolean;
 }
 
 const NoteButton: React.FC<NoteButtonProps> = ({
@@ -28,10 +29,15 @@ const NoteButton: React.FC<NoteButtonProps> = ({
   active,
   titleChanged,
   setActiveNoteId,
+  forceNamed,
 }) => {
   const [named, setNamed] = useState<boolean>(false);
   const [title, setTitle] = useState<string>(note.title);
   const [hovered, setHovered] = useState<boolean>(false);
+
+  useEffect(() => {
+    setNamed(forceNamed);
+  }, [forceNamed]);
 
   useEffect(() => {
     titleChanged(title, note.id);
@@ -88,7 +94,7 @@ const NoteButton: React.FC<NoteButtonProps> = ({
 
   let bgColor = "bg-gray-800";
   if (active) {
-    bgColor = "bg-slate-700 border-b-2 border-t-2";
+    bgColor = "bg-slate-700";
   }
   return (
     <button
@@ -97,7 +103,9 @@ const NoteButton: React.FC<NoteButtonProps> = ({
         e.preventDefault(); // Prevent the context menu from opening
         setNamed(false);
       }}
-      className={`block w-full text-left px-5 py-2 hover:bg-gray-700 ${bgColor} border-gray-800 box-border`}
+      className={`block w-full text-left px-5 py-2 ${
+        !active && "hover:bg-gray-700"
+      } ${bgColor} border-gray-800 box-border`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{ position: "relative" }} // Add position: relative to the button style
