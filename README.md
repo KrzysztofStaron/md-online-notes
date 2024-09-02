@@ -2,7 +2,7 @@
 https://simple-notes-app-zeta.vercel.app
 
 ```bash
-nom install
+npm install
 npm run dev
 # or
 yarn dev
